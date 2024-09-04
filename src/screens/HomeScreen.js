@@ -13,13 +13,44 @@ const { width } = Dimensions.get("window");
 const HomeScreen = ({ route }) => {
   const [userId, setUserId] = useState("");
   const [balance, setBalance] = useState(0);
+  const [name, setName] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigation = useNavigation();
   const { user } = useContext(AuthContext);
   const flatListRef = React.useRef(null);
 
+  
   const backendUrl = "https://kite-pay-server.onrender.com";
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user || !user.userId) {
+        console.error('User ID is not available.');
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `${backendUrl}/api/users/profile/${user.userId}`,  // Include user ID if required
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`, // Include the token in the Authorization header
+            },
+          }
+        );
+        setName(response.data.name);
+        setProfilePicture(response.data.profilePicture);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
 
   // Fetch user ID from AsyncStorage on component mount
   useEffect(() => {
@@ -42,6 +73,13 @@ const HomeScreen = ({ route }) => {
       fetchBalance();
     }
   }, [route.params?.updatedBalance]);
+
+  useEffect(() => {
+    if (route.params?.balance) {
+      setBalance(route.params.balance);
+    }
+  }, [route.params?.balance]);
+
 
   const fetchBalance = async () => {
     try {
@@ -96,6 +134,7 @@ const HomeScreen = ({ route }) => {
         {item.type.toUpperCase()}: &#x20A6;{item.amount.toFixed(2)}
       </Text>
       <Text>TransactionId: {item.reference}</Text>
+      <Text>Date:{' '} {new Date(item.date).toLocaleDateString()}</Text>
     </Card>
   );
 
@@ -107,7 +146,7 @@ const HomeScreen = ({ route }) => {
             <Avatar.Image
               source={{
                 uri:
-                  user?.profilePicture ||
+                  user?.profilePicture||
                   "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
               }}
               size={48}

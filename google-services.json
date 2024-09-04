@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1071959500536",
+    "project_id": "kite-pay",
+    "storage_bucket": "kite-pay.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1071959500536:android:d07182ba5f6c17bb987d0d",
+        "android_client_info": {
+          "package_name": "com.Kite_Pay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr-CV0clZKf_XVZ4cMP8nX-L2vAXmv_k0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

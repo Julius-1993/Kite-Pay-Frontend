@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState("");
+  const [user, setUser] = useState(null);
 
   useEffect(() =>{
     const loadUser = async () => {
@@ -15,23 +15,6 @@ export const AuthProvider = ({ children }) => {
     };
     loadUser();
   }, []);
-  
-  const refreshAccessToken = async () => {
-    try {
-      const response = await axios.post(`${backendUrl}/api/users/refresh-token`, {
-        refreshToken: user.refreshToken,
-      });
-      const newAccessToken = response.data.accessToken;
-      const updatedUser = { ...user, token: newAccessToken };
-      setUser(updatedUser);
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-    } catch (error) {
-      console.error('Failed to refresh access token:', error);
-      // Handle token refresh failure (e.g., force logout)
-    }
-  };
-
-
 
 
   const login = async (userData) => {
@@ -45,8 +28,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, logout, setUser, login, refreshAccessToken }}>
+    <AuthContext.Provider value={{ user, logout, login }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+

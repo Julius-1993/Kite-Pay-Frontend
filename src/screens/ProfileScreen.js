@@ -5,7 +5,8 @@ import { AuthContext } from "../context/AuthContext";
 import { AntDesign } from "@expo/vector-icons";
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
-import { Text, TextInput, Button, IconButton, Avatar, Card } from 'react-native-paper';
+import * as FileSystem from 'expo-file-system';
+import { Text, TextInput, Button, IconButton, Card } from 'react-native-paper';
 import { TouchableOpacity } from "react-native-gesture-handler";
 
 const ProfileScreen = ({ navigation }) => {
@@ -14,6 +15,7 @@ const ProfileScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
+  const [validProfilePicture, setValidProfilePicture] = useState("");
 
   const backendUrl = "https://kite-pay-server.onrender.com"; // Your backend URL
 
@@ -46,6 +48,17 @@ const ProfileScreen = ({ navigation }) => {
       fetchProfile();
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchValidUri = async () => {
+      if (profilePicture) {
+        const uri = await getValidUri(profilePicture);
+        setValidProfilePicture(uri);
+      }
+    };
+
+    fetchValidUri();
+  }, [profilePicture]);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -94,6 +107,29 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+  const fileExists = async (uri) => {
+    try {
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      return fileInfo.exists;
+    } catch (error) {
+      console.error('Error checking file existence:', error);
+      return false;
+    }
+  };
+
+  const getValidUri = async (uri) => {
+    if (!uri) {
+      return "https://via.placeholder.com/150"; // Placeholder URL for missing images
+    }
+    // Check if URI is from the device's internal storage
+    if (uri.startsWith('file://') || uri.startsWith('content://')) {
+      const exists = await fileExists(uri);
+      return exists ? uri : "https://via.placeholder.com/150";
+    }
+    // If URI is a valid HTTP/S URL, use it as is
+    return uri;
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
       <IconButton
@@ -103,15 +139,13 @@ const ProfileScreen = ({ navigation }) => {
       />
       <Card style={{ padding: 20 }}>
         <View style={{ alignItems: 'center' }}>
-        <Text variant="headlineLarge" style={{ marginBottom: 20,  }}>User Profile</Text>
+          <Text variant="headlineLarge" style={{ marginBottom: 20 }}>User Profile</Text>
         </View>
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
           <TouchableOpacity onPress={pickImage}>
-            <Avatar.Image
-              size={96}
-              source={{
-                uri: profilePicture ? profilePicture : "https://via.placeholder.com/150",
-              }}
+            <Image
+              style={{ width: 96, height: 96, borderRadius: 48 }}
+              source={{ uri: validProfilePicture || "https://via.placeholder.com/150" }}
             />
           </TouchableOpacity>
           <Text variant="bodySmall" style={{ color: '#4CAF50', marginTop: 8 }}>Tap to change profile picture</Text>
@@ -148,7 +182,7 @@ const ProfileScreen = ({ navigation }) => {
           buttonColor="red"
           icon={() => <AntDesign name="logout" size={20} color="white" />}
           contentStyle={{ flexDirection: 'row-reverse' }}
-          labelStyle={{ color: 'white', marginLeft: 8, }}
+          labelStyle={{ color: 'white', marginLeft: 8 }}
         >
           Logout
         </Button>
